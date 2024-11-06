@@ -1,4 +1,4 @@
-# kubectl-cde
+# kubectl-debug-cde
 
 This repository implements a kubectl plugin to debug Pods with a Cloud Development Environment.
 
