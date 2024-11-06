@@ -2,6 +2,8 @@
 
 This repository implements a kubectl plugin to debug Pods with a Cloud Development Environment.
 
+![](demo.png)
+
 ## Prerequirements
 
 The [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator/tree/main) needs to be installed in the Kubernetes cluster.
