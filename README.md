@@ -1,12 +1,13 @@
-# kubectl-debug-cde
+# kubectl-debug-ide
 
-This repository implements a kubectl plugin to debug Pods with a Cloud Development Environment.
+A `kubectl` plugin to debug Pods with an IDE rather than the CLI.
 
-![](demo.png)
+![kubectl debug-ide in action](img/demo.gif)
 
 ## Prerequirements
 
-The [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator/tree/main) needs to be installed in the Kubernetes cluster.
+The [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator/tree/main) needs to be installed in the
+Kubernetes cluster.
 
 ## Details
 
@@ -17,14 +18,12 @@ It accepts the same flags as the command `kubectl debug` which it tries to mimic
 ## Running
 
 ```sh
-# assumes you have a working KUBECONFIG
-$ go build cmd/kubectl-debug_cde.go
-# place the built binary somewhere in your PATH
-$ cp ./kubectl-debug_cde /usr/local/bin
+$ go install cmd/kubectl-debug_ide.go
 
+# assumes you have a working KUBECONFIG
 # you can now begin using this plugin as a regular kubectl command:
 # start debugging the pod `outyet`
-$ kubectl debug-cde outyet \
+$ kubectl debug-ide outyet \
   --image ghcr.io/l0rd/outyet-dev:latest \
   --copy-to outyet-debug \
   --share-processes \
@@ -42,10 +41,10 @@ The `./kubectl_complete-cde` script shows a hybrid approach to providing complet
 
 One can then do things like:
 ```
-$ kubectl debug-cde <TAB>
+$ kubectl debug-ide <TAB>
 outyet
 
-$ kubectl debug-cde --<TAB>
+$ kubectl debug-ide --<TAB>
 --copy-to
 --image
 --git-repository
@@ -59,4 +58,4 @@ Note: kubectl v1.26 or higher is required for shell completion to work for plugi
 
 You can "uninstall" this plugin from kubectl by simply removing it from your PATH:
 
-    $ rm /usr/local/bin/kubectl-debug_cde
+    $ rm /usr/local/bin/kubectl-debug_ide
