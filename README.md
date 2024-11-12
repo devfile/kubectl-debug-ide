@@ -1,4 +1,4 @@
-# kubectl-debug-ide
+# kubectl debug-ide
 
 A `kubectl` plugin to debug Pods with an IDE rather than the CLI.
 
