@@ -13,18 +13,21 @@ repository is cloned within the debugging container.
 
 ![kubectl debug-ide in action](img/demo.gif)
 
-The command returns the URL of the remote IDE (local IDE support is not implemented yet). Opening the IDE URL in a 
-browser allow debugging a process in the target container. Note that the IDE runs in the debugging container, but
-"local" debugging is possible as the debugging container and the target container share the same process namespace.
+The command returns the URL of the remote IDE (local IDE support is not implemented yet).
+Opening the IDE URL in a browser allows debugging a process in the target container.
 
 ![debugging using an IDE](img/outyet-debug.gif)
 
+The IDE runs in the debugging container, but "local" debugging is possible as containers share the PID namespace.
+
 ## Examples
 
-The following command creates a copy of the Pod `$TARGET_POD` with an extra container using image
-`$DEBUGGING_CONTAINER_IMG` where `$GIT_REPO` is cloned and an IDE is started. 
+#### Debug a Pod by creating a copy and adding an IDE
 
-```sh
+The following command creates a copy of the Pod `$TARGET_POD`. In the copy it adds a debugging container where a git
+repository is cloned and an IDE is started.
+
+```bash
 TARGET_POD="outyet"
 DEBUGGING_CONTAINER_IMG="ghcr.io/l0rd/outyet-dev:latest"
 TARGET_POD_COPY="outyet-debug"
@@ -40,23 +43,17 @@ kubectl debug-ide $TARGET_POD \
 :mega: The containers in the copy of target Pod share the PID namespace. This is helpful to attach the IDE debugger to
 the target process as they run in separate containers.
 
+#### Delete the Debugging Pod
+
 Delete the `DevWorkspace` Custom resource to stop the debugging session and cleanup the Kubernetes resources created by 
 `kubectl debug-id`:
 
-```sh
+```bash
 TARGET_POD="outyet"
-DEBUGGING_CONTAINER_IMG="ghcr.io/l0rd/outyet-dev:latest"
-TARGET_POD_COPY="outyet-debug"
-GIT_REPO="https://github.com/l0rd/outyet.git"
-
-kubectl debug-ide $TARGET_POD \
-  --image $DEBUGGING_CONTAINER_IMG \
-  --copy-to $TARGET_POD_COPY \
-  --share-processes \
-  --git-repository $GIT_REPO
+kubectl delete ${TARGET_POD}-dw 
 ```
 
-:mega: `kubectl delete pod` won't work in this case as the DevWorkspace Operator will restart the Pod.
+:mega: `kubectl delete pod` doesn't work, the DevWorkspace Operator restarts the Pod.
 
 ## Requirements
 
