@@ -13,7 +13,8 @@ Kubernetes cluster.
 
 The plugin uses the [client-go library](https://github.com/kubernetes/client-go/tree/master/tools/clientcmd) to create a DevWorkspace in the current namespace.
 
-It accepts the same flags as the command `kubectl debug` which it tries to mimic as much as possible, but including an IDE for source code debugging.
+It accepts the same flags as the command `kubectl debug` which it tries to mimic as much as possible, but including an
+IDE for source code debugging.
 
 ## Running
 
