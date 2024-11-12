@@ -1,2 +1,3 @@
 kubectl-debug_ide
 .idea/*
+.DS_Store

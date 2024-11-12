@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	flags := pflag.NewFlagSet("kubectl-debug_cde", pflag.ExitOnError)
+	flags := pflag.NewFlagSet("kubectl-debug_ide", pflag.ExitOnError)
 	pflag.CommandLine = flags
 
 	root := pkg.NewCmdDebugIDE(genericiooptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})

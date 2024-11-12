@@ -94,7 +94,7 @@ func NewCmdDebugIDE(streams genericiooptions.IOStreams) *cobra.Command {
 	o := NewDebugIDEOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "debug-cde [pod] [flags]",
+		Use:          "debug-ide [pod] [flags]",
 		Short:        "Create a copy of a Pod and add a Cloud Development Environment to debug it.",
 		Example:      fmt.Sprintf(debugIDEExample, "kubectl"),
 		SilenceUsage: true,

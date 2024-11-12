@@ -65,18 +65,14 @@ EOF
 kubectl wait --for=condition=Ready pod/outyet
 
 echo
-echo "Building..."
-echo
-go build cmd/kubectl-debug_cde.go
-echo
 echo "Installing..."
 echo
-cp ./kubectl-debug_cde ~/.bin/
+go install cmd/kubectl-debug_ide.go
 
 echo
 echo "Running..."
 echo
-kubectl debug-cde outyet \
+kubectl debug-ide outyet \
   --image ghcr.io/l0rd/outyet-dev:latest \
   --copy-to outyet-debug \
   --share-processes \
