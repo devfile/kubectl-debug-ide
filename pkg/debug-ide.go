@@ -18,10 +18,11 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -162,16 +163,18 @@ func (o *DebugIDEOptions) Complete(cmd *cobra.Command, args []string) error {
 
 	namespace, _, _ := kubeConfig.Namespace()
 	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("NewForConfig error: %v", err)
+	}
+
 	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), o.targetPodName, metav1.GetOptions{})
-	if errors.IsNotFound(err) {
+	if k8serrors.IsNotFound(err) {
 		return fmt.Errorf("Pod %s in namespace %s not found\n", pod, namespace)
-	} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
+	}
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
 		return fmt.Errorf("Error getting pod %s in namespace %s: %v\n",
 			pod, namespace, statusError.ErrStatus.Message)
-	} else if err != nil {
-		panic(err.Error())
-	} else {
-		fmt.Printf("🎯 found the target pod %s in namespace %s.\n", pod.Name, namespace)
 	}
 
 	podContainersNum := len(pod.Spec.Containers)
@@ -299,17 +302,17 @@ func (o *DebugIDEOptions) Run() error {
 	// Generate the DevWorkspace
 	dw, err := generate(*o)
 	if err != nil {
-		return fmt.Errorf("Error generating devworkspace: %v", err)
+		return fmt.Errorf("error generating devworkspace: %v", err)
 	}
 
 	// Convert the DevWorkspace to an Unstructured
 	obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&dw)
 	if err != nil {
-		return fmt.Errorf("Found error while coverting resource to unstructured err - %v", err)
+		return fmt.Errorf("found error while coverting resource to unstructured err - %v", err)
 	}
 	unstructuredResource := &unstructured.Unstructured{Object: obj}
 
-	// Automatically get the GroupVersionResouce for the DevWorkspace
+	// Automatically get the GroupVersionResource for the DevWorkspace
 	gvk := dw.GroupVersionKind()
 	gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
 	groupResources, err := restmapper.GetAPIGroupResources(clientset.Discovery())
@@ -322,17 +325,17 @@ func (o *DebugIDEOptions) Run() error {
 		return fmt.Errorf("RESTMapping error: %v", err)
 	}
 
-	// Check if the DevWorksapce already exist
+	// Check if the DevWorkspace already exist
 	namespace, _, _ := kubeConfig.Namespace()
 	result, err := dynClient.Resource(mapping.Resource).Namespace(namespace).Get(
 		context.TODO(),
 		dw.Name,
 		metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return fmt.Errorf("Error checking for the existance of a DevWorkspace named %s: %v", dw.Name, err)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("error checking for the existance of a DevWorkspace named %s: %v", dw.Name, err)
 	}
 	if result != nil && result.Object != nil {
-		return fmt.Errorf("A DevWorkspace named %s already exist. Delete it to create a new one.", dw.Name)
+		return fmt.Errorf("a DevWorkspace named %s already exist. Delete it to create a new one", dw.Name)
 	}
 
 	// Create the DevWorkspace
@@ -341,7 +344,7 @@ func (o *DebugIDEOptions) Run() error {
 		unstructuredResource,
 		metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("Error creating custom resource: %v\n", err)
+		return fmt.Errorf("error creating custom resource: %v\n", err)
 	}
 	dwName := result.Object["metadata"].(map[string]interface{})["name"].(string)
 	fmt.Printf("⌨️ created devworkspace %s in namespace %s.\n", dwName, namespace)
@@ -351,6 +354,9 @@ func (o *DebugIDEOptions) Run() error {
 		context.TODO(),
 		dwName,
 		metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("dynClient Get error: %v", err)
+	}
 	deploymentName := dwUnstruct.Object["status"].(map[string]interface{})["devworkspaceId"].(string)
 
 	// Wait for deployment status condition available == true
@@ -360,6 +366,9 @@ func (o *DebugIDEOptions) Run() error {
 	timeout := 30
 	for i := 0; i < timeout; i++ {
 		d, err = clientset.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("get Deployment error: %v", err)
+		}
 		for _, condition := range d.Status.Conditions {
 			if condition.Type == appv1.DeploymentAvailable {
 				if condition.Status == "True" {
@@ -377,7 +386,11 @@ func (o *DebugIDEOptions) Run() error {
 	}
 
 	if !available {
-		return fmt.Errorf("the deployment %s is not available after %d seconds (%v)", deploymentName, timeout, d.Status.Conditions)
+		var conditions []appv1.DeploymentCondition
+		if d != nil {
+			conditions = d.Status.Conditions
+		}
+		return fmt.Errorf("the deployment %s is not available after %d seconds (%v)", deploymentName, timeout, conditions)
 	}
 
 	fmt.Printf("done\n")
@@ -388,13 +401,13 @@ func (o *DebugIDEOptions) Run() error {
 			LabelSelector: "controller.devfile.io/devworkspace_name=" + dwName,
 		})
 	if err != nil {
-		return fmt.Errorf("Error listing devworkspace pods: %v", err)
+		return fmt.Errorf("error listing devworkspace pods: %v", err)
 	}
 	if len(pods.Items) == 0 {
-		return fmt.Errorf("No devworkspace pods found for DevWorkspace: %s", dwName)
+		return fmt.Errorf("no devworkspace pods found for DevWorkspace: %s", dwName)
 	}
 	if len(pods.Items) > 1 {
-		return fmt.Errorf("More than one devworkspace pods found for DevWorkspace: %s", dwName)
+		return fmt.Errorf("more than one devworkspace pods found for DevWorkspace: %s", dwName)
 	}
 	podName := pods.Items[0].Name
 
@@ -405,6 +418,9 @@ func (o *DebugIDEOptions) Run() error {
 	podReadinessTimeout := 30
 	for i := 0; i < podReadinessTimeout; i++ {
 		p, err = clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("get Pod error: %v", err)
+		}
 		for _, condition := range p.Status.Conditions {
 			if condition.Type == corev1.PodReady {
 				if condition.Status == "True" {
@@ -422,7 +438,11 @@ func (o *DebugIDEOptions) Run() error {
 	}
 
 	if !ready {
-		return fmt.Errorf("the pod %s is not ready after %d seconds (%v)", podName, podReadinessTimeout, p.Status.Conditions)
+		var conditions []corev1.PodCondition
+		if p != nil {
+			conditions = p.Status.Conditions
+		}
+		return fmt.Errorf("the pod %s is not ready after %d seconds (%v)", podName, podReadinessTimeout, conditions)
 	}
 
 	fmt.Printf("done\n")
@@ -432,6 +452,9 @@ func (o *DebugIDEOptions) Run() error {
 		context.TODO(),
 		dwName,
 		metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("dynClient Get error: %v", err)
+	}
 	dwMainURL := dwUnstruct.Object["status"].(map[string]interface{})["mainUrl"].(string)
 	fmt.Printf("🐞 click on the following link ⬇️ and start debugging\n\n")
 	fmt.Printf("%s\n", dwMainURL)

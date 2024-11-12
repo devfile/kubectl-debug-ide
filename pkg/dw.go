@@ -182,7 +182,7 @@ func projectName(remote string) (string, error) {
 		return "", errors.New("Invalid remote name. It doesn't contain the '/': " + remote)
 	}
 	if i == len(remote)-1 {
-		return "", errors.New("Invalid remote name. It ends with 2 slashes")
+		return "", errors.New("invalid remote name. It ends with 2 slashes")
 	}
 	return remote[i+1:], nil
 }

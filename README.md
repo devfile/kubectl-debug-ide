@@ -43,7 +43,7 @@ kubectl debug-ide $TARGET_POD \
 :mega: The containers in the copy of target Pod share the PID namespace. This is helpful to attach the IDE debugger to
 the target process as they run in separate containers.
 
-#### Delete the Debugging Pod
+#### Delete the debugging Pod
 
 Delete the `DevWorkspace` Custom resource to stop the debugging session and cleanup the Kubernetes resources created by 
 `kubectl debug-id`:
@@ -88,4 +88,5 @@ You can "uninstall" this plugin from kubectl by simply removing it from your PAT
 The awesome [sample-cli-plugin](https://github.com/kubernetes/sample-cli-plugin) was used to kick off this plugin.
 
 `kubectl debug-ide` is just a generator of DevWorkspace Custom Resources. The heavy lifting, the Cloud Development
-Environment provisioning, is done by the [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator).
+Environment provisioning, is done by the [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator) 
+:heart:. Go check it out!

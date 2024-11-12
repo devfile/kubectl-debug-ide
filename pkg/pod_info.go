@@ -28,7 +28,3 @@ type ContainerInfo struct {
 	cpuRequest    string
 	cpuLimit      string
 }
-
-type PodInfo struct {
-	containers []ContainerInfo
-}
