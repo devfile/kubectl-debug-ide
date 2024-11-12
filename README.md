@@ -38,7 +38,9 @@ you must copy the file `./kubectl_complete-cde` somewhere on `$PATH` and give it
 
 The `./kubectl_complete-cde` script shows a hybrid approach to providing completions:
 1. it uses the builtin `__complete` command provided by [Cobra](https://github.com/spf13/cobra) for flags
-1. it calls `kubectl` to obtain the list of pods to complete arguments (note that a more elegant approach would be to have the `kubectl-cde` program itself provide completion of arguments by implementing Cobra's `ValidArgsFunction` to fetch the list of pods, but it would then be a less varied example)
+1. it calls `kubectl` to obtain the list of pods to complete arguments (note that a more elegant approach would be to
+have the `kubectl-cde` program itself provide completion of arguments by implementing Cobra's `ValidArgsFunction` to
+fetch the list of pods, but it would then be a less varied example)
 
 One can then do things like:
 ```
