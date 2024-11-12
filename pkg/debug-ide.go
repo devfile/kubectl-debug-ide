@@ -307,7 +307,7 @@ func (o *DebugIDEOptions) Run() error {
 	// Convert the DevWorkspace to an Unstructured
 	obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&dw)
 	if err != nil {
-		return fmt.Errorf("found error while coverting resource to unstructured err - %v", err)
+		return fmt.Errorf("found error while converting resource to unstructured err - %v", err)
 	}
 	unstructuredResource := &unstructured.Unstructured{Object: obj}
 

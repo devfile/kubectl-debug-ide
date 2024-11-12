@@ -1,0 +1,18 @@
+---
+exclude: ^vendor/|^test/tools/vendor/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+    rev: v3.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: check-byte-order-marker
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: check-yaml
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        exclude: go.sum

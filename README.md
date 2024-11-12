@@ -45,12 +45,12 @@ the target process as they run in separate containers.
 
 #### Delete the debugging Pod
 
-Delete the `DevWorkspace` Custom resource to stop the debugging session and cleanup the Kubernetes resources created by 
+Delete the `DevWorkspace` Custom resource to stop the debugging session and cleanup the Kubernetes resources created by
 `kubectl debug-id`:
 
 ```bash
 TARGET_POD="outyet"
-kubectl delete ${TARGET_POD}-dw 
+kubectl delete ${TARGET_POD}-dw
 ```
 
 :mega: `kubectl delete pod` doesn't work, the DevWorkspace Operator restarts the Pod.
@@ -64,7 +64,7 @@ Building (and currently installing too) requires [Go](https://go.dev/dl/).
 
 ## Installation
 
-To install `kubectl debug-ide` clone this git repository and run `go install`:  
+To install `kubectl debug-ide` clone this git repository and run `go install`:
 
 ```sh
 $ go install cmd/kubectl-debug_ide.go
@@ -88,5 +88,5 @@ You can "uninstall" this plugin from kubectl by simply removing it from your PAT
 The awesome [sample-cli-plugin](https://github.com/kubernetes/sample-cli-plugin) was used to kick off this plugin.
 
 `kubectl debug-ide` is just a generator of DevWorkspace Custom Resources. The heavy lifting, the Cloud Development
-Environment provisioning, is done by the [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator) 
+Environment provisioning, is done by the [DevWorkspace Operator](https://github.com/devfile/devworkspace-operator)
 :heart:. Go check it out!
