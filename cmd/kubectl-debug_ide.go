@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"devfile.io/kubectl-cde/pkg"
 	"os"
+
+	"devfile.io/kubectl-cde/pkg"
 
 	"github.com/spf13/pflag"
 

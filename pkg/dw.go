@@ -2,10 +2,11 @@ package pkg
 
 import (
 	"errors"
+	"strings"
+
 	dwv1alpha2 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
 	devfileattributes "github.com/devfile/api/v2/pkg/attributes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 const (
@@ -15,8 +16,8 @@ const (
 	defaultRemoteName                    = "origin"
 	defaultDevMemoryLimit                = "8G"
 	defaultDevMemoryRequest              = "2G"
-	defaultDevCpuLimit                   = "4"
-	defaultDevCpuRequest                 = "1"
+	defaultDevCPULimit                   = "4"
+	defaultDevCPURequest                 = "1"
 	defaultEndpointExposure              = dwv1alpha2.PublicEndpointExposure
 	defaultEndpointProtocol              = dwv1alpha2.HTTPEndpointProtocol
 	defaultEndpointPath                  = "/"
@@ -27,7 +28,7 @@ const (
 	cheCodeContributionComponentName     = "che-code-runtime-description"
 	cheCodeContributionContainerEnvName  = "CODE_HOST"
 	cheCodeContributionContainerEnvValue = "0.0.0.0"
-	cheCodeContributionUri               = "https://eclipse-che.github.io/che-plugin-registry/main/v3/plugins/che-incubator/che-code/latest/devfile.yaml"
+	cheCodeContributionURI               = "https://eclipse-che.github.io/che-plugin-registry/main/v3/plugins/che-incubator/che-code/latest/devfile.yaml"
 )
 
 var cheCodeContainer = dwv1alpha2.ContainerComponentPluginOverride{
@@ -44,7 +45,7 @@ var cheCodeContribution = dwv1alpha2.ComponentContribution{
 	PluginComponent: dwv1alpha2.PluginComponent{
 		ImportReference: dwv1alpha2.ImportReference{
 			ImportReferenceUnion: dwv1alpha2.ImportReferenceUnion{
-				Uri: cheCodeContributionUri,
+				Uri: cheCodeContributionURI,
 			},
 		},
 		PluginOverrides: dwv1alpha2.PluginOverrides{
@@ -99,8 +100,8 @@ func template(o DebugIDEOptions) (dwv1alpha2.DevWorkspaceTemplateSpec, error) {
 }
 
 func templateContent(o DebugIDEOptions) (dwv1alpha2.DevWorkspaceTemplateSpecContent, error) {
-	//For now only one git repository is supported,
-	//but we may support multiple ones in the future
+	// For now only one git repository is supported,
+	// but we may support multiple ones in the future
 	gitRepos := []string{o.gitRepository}
 	dwProjects := make([]dwv1alpha2.Project, 0)
 	for _, repo := range gitRepos {
@@ -113,19 +114,13 @@ func templateContent(o DebugIDEOptions) (dwv1alpha2.DevWorkspaceTemplateSpecCont
 
 	// Add the CDE container
 	dwComponents := make([]dwv1alpha2.Component, 0)
-	c, err := cdeContainer(o.debugImage)
-	if err != nil {
-		return dwv1alpha2.DevWorkspaceTemplateSpecContent{}, err
-	}
+	c := cdeContainer(o.debugImage)
 	dwComponents = append(dwComponents, c)
 
 	// Add the Pod containers
 	containers := o.targetPodContainers
 	for _, ctr := range containers {
-		c, err := container(ctr)
-		if err != nil {
-			return dwv1alpha2.DevWorkspaceTemplateSpecContent{}, err
-		}
+		c := container(ctr)
 		dwComponents = append(dwComponents, c)
 	}
 
@@ -187,13 +182,13 @@ func projectName(remote string) (string, error) {
 	return remote[i+1:], nil
 }
 
-func cdeContainer(image string) (dwv1alpha2.Component, error) {
+func cdeContainer(image string) dwv1alpha2.Component {
 	c := dwv1alpha2.Container{
 		Image:         image,
 		MemoryLimit:   defaultDevMemoryLimit,
 		MemoryRequest: defaultDevMemoryRequest,
-		CpuLimit:      defaultDevCpuLimit,
-		CpuRequest:    defaultDevCpuRequest,
+		CpuLimit:      defaultDevCPULimit,
+		CpuRequest:    defaultDevCPURequest,
 	}
 	comp := dwv1alpha2.Component{
 		Name:       defaultDevContainerName,
@@ -204,11 +199,11 @@ func cdeContainer(image string) (dwv1alpha2.Component, error) {
 			},
 		},
 	}
-	return comp, nil
+	return comp
 }
 
-func container(ctr ContainerInfo) (dwv1alpha2.Component, error) {
-	var vars []dwv1alpha2.EnvVar
+func container(ctr ContainerInfo) dwv1alpha2.Component {
+	vars := make([]dwv1alpha2.EnvVar, 0, len(ctr.env))
 	for _, env := range ctr.env {
 		v := dwv1alpha2.EnvVar{
 			Name:  env.name,
@@ -216,7 +211,7 @@ func container(ctr ContainerInfo) (dwv1alpha2.Component, error) {
 		}
 		vars = append(vars, v)
 	}
-	var vols []dwv1alpha2.VolumeMount
+	vols := make([]dwv1alpha2.VolumeMount, 0, len(ctr.volumes))
 	for _, vol := range ctr.volumes {
 		v := dwv1alpha2.VolumeMount{
 			Name: vol.name,
@@ -224,7 +219,7 @@ func container(ctr ContainerInfo) (dwv1alpha2.Component, error) {
 		}
 		vols = append(vols, v)
 	}
-	var ends []dwv1alpha2.Endpoint
+	ends := make([]dwv1alpha2.Endpoint, 0, len(ctr.endpoints))
 	for _, end := range ctr.endpoints {
 		secure := defaultEndpointSecure
 		e := dwv1alpha2.Endpoint{
@@ -258,7 +253,7 @@ func container(ctr ContainerInfo) (dwv1alpha2.Component, error) {
 			},
 		},
 	}
-	return comp, nil
+	return comp
 }
 
 func contribution() (dwv1alpha2.ComponentContribution, error) {

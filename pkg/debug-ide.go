@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,9 +34,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/restmapper"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -117,7 +118,6 @@ func NewCmdDebugIDE(streams genericiooptions.IOStreams) *cobra.Command {
 		},
 	}
 
-	//cmd.Flags().BoolVar(&o.listNamespaces, "list", o.listNamespaces, "if true, print the list of all namespaces in the current KUBECONFIG")
 	cmd.Flags().StringVar(&o.ideReference, "ide", defaultIdeReference, "URI to the devfile with the IDE definition")
 	cmd.Flags().StringVar(&o.debugImage, "image", defaultDebugImage, "Image of the debug sidecar container")
 	cmd.Flags().StringVar(&o.gitRepository, "git-repository", o.gitRepository, "URL of the git repository with the source code of the application we want to debug")
@@ -169,11 +169,11 @@ func (o *DebugIDEOptions) Complete(cmd *cobra.Command, args []string) error {
 
 	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), o.targetPodName, metav1.GetOptions{})
 	if k8serrors.IsNotFound(err) {
-		return fmt.Errorf("Pod %s in namespace %s not found\n", pod, namespace)
+		return fmt.Errorf("pod %s in namespace %s not found", pod, namespace)
 	}
 	var statusError *k8serrors.StatusError
 	if errors.As(err, &statusError) {
-		return fmt.Errorf("Error getting pod %s in namespace %s: %v\n",
+		return fmt.Errorf("error getting pod %s in namespace %s: %v",
 			pod, namespace, statusError.ErrStatus.Message)
 	}
 
@@ -279,7 +279,6 @@ func (o *DebugIDEOptions) Validate() error {
 // current context based on a provided namespace.
 // Apply a DevWorkspace object
 func (o *DebugIDEOptions) Run() error {
-
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{}
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
@@ -332,7 +331,7 @@ func (o *DebugIDEOptions) Run() error {
 		dw.Name,
 		metav1.GetOptions{})
 	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("error checking for the existance of a DevWorkspace named %s: %v", dw.Name, err)
+		return fmt.Errorf("error checking for the existence of a DevWorkspace named %s: %v", dw.Name, err)
 	}
 	if result != nil && result.Object != nil {
 		return fmt.Errorf("a DevWorkspace named %s already exist. Delete it to create a new one", dw.Name)
@@ -344,7 +343,7 @@ func (o *DebugIDEOptions) Run() error {
 		unstructuredResource,
 		metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("error creating custom resource: %v\n", err)
+		return fmt.Errorf("error creating custom resource: %v", err)
 	}
 	dwName := result.Object["metadata"].(map[string]interface{})["name"].(string)
 	fmt.Printf("⌨️ created devworkspace %s in namespace %s.\n", dwName, namespace)
@@ -366,7 +365,7 @@ func (o *DebugIDEOptions) Run() error {
 	timeout := 30
 	for i := 0; i < timeout; i++ {
 		d, err = clientset.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
-		if err != nil {
+		if err != nil && !k8serrors.IsNotFound(err) {
 			return fmt.Errorf("get Deployment error: %v", err)
 		}
 		for _, condition := range d.Status.Conditions {
@@ -456,7 +455,7 @@ func (o *DebugIDEOptions) Run() error {
 		return fmt.Errorf("dynClient Get error: %v", err)
 	}
 	dwMainURL := dwUnstruct.Object["status"].(map[string]interface{})["mainUrl"].(string)
-	fmt.Printf("🐞 click on the following link ⬇️ and start debugging\n\n")
+	fmt.Printf("🐞 open the following link ⬇️ and start debugging\n\n")
 	fmt.Printf("%s\n", dwMainURL)
 	return nil
 }

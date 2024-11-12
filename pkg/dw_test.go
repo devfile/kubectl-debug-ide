@@ -1,9 +1,10 @@
 package pkg
 
 import (
-	attributes2 "github.com/devfile/api/v2/pkg/attributes"
 	"reflect"
 	"testing"
+
+	attributes2 "github.com/devfile/api/v2/pkg/attributes"
 )
 
 func Test_projectName(t *testing.T) {
