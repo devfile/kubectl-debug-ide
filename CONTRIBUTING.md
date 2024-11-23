@@ -127,4 +127,6 @@ passes these checks, but we also have more criteria than just that before we can
 accept and merge it. We recommend that you check the following things locally
 before you submit your code:
 
-⚠️ **Create a checklist that authors should use before submitting a pull request**
+- `golangci-lint run`
+- `pre-commit run --all-files`
+- `snyk test`
