@@ -27,7 +27,6 @@ linters:
     - wsl
     - godox
     - tparallel
-    - gomnd
     - nlreturn
     - noctx
     - nestif
@@ -62,7 +61,6 @@ linters:
     - nonamedreturns
     - exhaustruct
     # deprecated linters
-    - execinquery
     - exportloopref
 linters-settings:
   errcheck:

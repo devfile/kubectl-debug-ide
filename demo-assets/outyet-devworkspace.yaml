@@ -29,4 +29,3 @@ spec:
             env:
               - name: CODE_HOST
                 value: 0.0.0.0
-
