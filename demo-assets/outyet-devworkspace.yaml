@@ -1,0 +1,32 @@
+kind: DevWorkspace
+apiVersion: workspace.devfile.io/v1alpha2
+metadata:
+  name: outyet-dw
+spec:
+  started: true
+  template:
+    attributes:
+      controller.devfile.io/storage-type: ephemeral
+    projects:
+      - name: outyet
+        git:
+          remotes:
+            origin: https://github.com/l0rd/outyet.git
+    components:
+      - name: dev-tooling
+        container:
+          image: ghcr.io/l0rd/outyet-dev:latest
+          memoryRequest: 2G
+          memoryLimit: 10G
+          cpuRequest: '1'
+          cpuLimit: '4'
+  contributions:
+    - name: che-code
+      uri: https://eclipse-che.github.io/che-plugin-registry/main/v3/plugins/che-incubator/che-code/latest/devfile.yaml
+      components:
+        - name: che-code-runtime-description
+          container:
+            env:
+              - name: CODE_HOST
+                value: 0.0.0.0
+
